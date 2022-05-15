@@ -40,7 +40,6 @@ public class CodeGenerator {
     public CodeGenerator() {
         String filename = programName + ".j";
         try {
-            // TODO: PrintWriter用法
             bytecodeFile = new PrintWriter(new PrintStream(new
                     File(filename)));
         } catch (FileNotFoundException e) {

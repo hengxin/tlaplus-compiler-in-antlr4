@@ -398,7 +398,45 @@ public class TLASemantics implements TLAListener{
 
     @Override
     public void enterInfix(TLAParser.InfixContext ctx) {
-
+        String infixOp = ctx.INFIXOP().getText();
+        boolean flag = false;
+        switch (infixOp) {
+            case "=>":  // 推导
+                String name = ctx.expression(0).getText();
+                if (!(SymbolTable.getInstance().getSymbolByName(name) instanceof State)) {
+                    flag = true;
+                }
+                break;
+            case "..": // 两数范围
+            case ">":
+            case ">=":
+            case "<":
+            case "<=":
+            case "=<":
+            case "<=>": // 恒等于 从两数范围到这里的判断一样
+                String left = ctx.expression(0).getText();
+                String right = ctx.expression(1).getText();
+                // 首先判断是否是变量
+                if (!(SymbolTable.getInstance().getSymbolByName(left) instanceof Variable)) {
+                    flag = true;
+                }
+                if (!(SymbolTable.getInstance().getSymbolByName(left) instanceof Variable)) {
+                    flag = true;
+                }
+                // 再判断变量类型是否相同
+                String leftType = ((Variable) SymbolTable.getInstance().getSymbolByName(left)).getType();
+                String rightType = ((Variable) SymbolTable.getInstance().getSymbolByName(right)).getType();
+                if (!leftType.equals(rightType)) {
+                    flag = true;
+                }
+                break;
+            default:
+                break;
+        }
+        if (flag) {
+            reportError(MISMATCHED_OP, ctx.INFIXOP().getSymbol().getLine(),
+                    "Type mismatched for operands.");
+        }
     }
 
     @Override
@@ -408,7 +446,34 @@ public class TLASemantics implements TLAListener{
 
     @Override
     public void enterPrefix(TLAParser.PrefixContext ctx) {
-
+        String prefixOp = ctx.PREFIXOP().getText();
+        String name = ctx.expression().getText();
+        boolean flag = false;
+        switch (prefixOp) {
+            // 某个状态恒成立
+            case "[]":
+                if (!(SymbolTable.getInstance().getSymbolByName(name) instanceof State)) {
+                    flag = true;
+                }
+                break;
+            case "~":
+            case "<>":
+            case "DOMAIN":
+            case "ENABLED":
+            case "SUBSET":
+            case "UNCHANGED":
+                if (!(SymbolTable.getInstance().getSymbolByName(name) instanceof Variable)) {
+                    flag = true;
+                }
+                break;
+            case "UNION":
+            default:
+                break;
+        }
+        if (flag) {
+            reportError(MISMATCHED_OP, ctx.PREFIXOP().getSymbol().getLine(),
+                    "Type mismatched for operands.");
+        }
     }
 
     @Override
@@ -532,7 +597,25 @@ public class TLASemantics implements TLAListener{
 
     @Override
     public void enterPostfix(TLAParser.PostfixContext ctx) {
-
+        String postfixOp = ctx.POSTFIXOP().getText();
+        boolean flag = false;
+        switch (postfixOp) {
+            case "^+":
+            case "^*":
+            case "^#":
+            case "'":  // 变量改变
+                String name = ctx.expression().getText();
+                if (!(SymbolTable.getInstance().getSymbolByName(name) instanceof Variable)) {
+                    flag = true;
+                }
+                break;
+            default:
+                break;
+        }
+        if (flag) {
+            reportError(MISMATCHED_OP, ctx.POSTFIXOP().getSymbol().getLine(),
+                    "Type mismatched for operands.");
+        }
     }
 
     @Override
